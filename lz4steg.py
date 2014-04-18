@@ -73,7 +73,11 @@ def scan_lz4(cover, skip_bytes=4):
     next_log = cend // 100
     while cpos < cend:
         if cpos > next_log:
-            print cpos * 100 // cend, randbits // 8 * 100. / cpos
+            print(
+                cpos * 100 // cend,
+                randbits // 8 * 100. / cpos,
+                randpartbits // 8 * 100. / cpos,
+            )
             next_log += cend // 100
         token = cover[cpos]
         cpos += 1
@@ -118,7 +122,7 @@ def scan_lz4(cover, skip_bytes=4):
             _put_byte(window, table, chain, pos, window[(pos - moff) & 0xffff])
             pos += 1
             mlen -= 1
-    return randbits // 8
+    return randbits // 8, randpartbits // 8
 
 
 def hide_lz4(cover, message, skip_bytes=4, store_len=True):
@@ -303,8 +307,8 @@ if __name__ == '__main__':
         cover = hide_lz4(cover, args.message)
         sys.stdout.write(cover)
     else:
-        bytes = scan_lz4(cover)
-        print '%d bytes of storage in %d (%.2f %%)', (
-            bytes, len(cover), bytes * 100. / len(cover)
+        bytes, pbytes = scan_lz4(cover)
+        print '%d (%d) bytes of storage in %d (%.2f %%)' % (
+            bytes, pbytes, len(cover), bytes * 100. / len(cover)
         )
 
