@@ -16,13 +16,12 @@ def _hash(b):
 class LZ77Steg(object):
     
     def init(self, cover):
-        '''Must be called prior to scan/store/retrieve'''
+        '''Will be called prior to scan/store/retrieve'''
         self.cover = bytearray(cover)
         self.window = bytearray(2**16)
         self.table = [None] * (2**16)
         self.chain = [None] * (2**16)
         self.pos = self.cpos = 0
-        self.cend = len(self.cover)
     
     def get_tokens(self):
         '''Generator for tokens, must be implemented'''
@@ -31,6 +30,16 @@ class LZ77Steg(object):
     def is_match(self, t):
         '''Is token a match token?'''
         raise NotImplementedError
+    
+    def get_cbyte(self):
+        self.cpos += 1
+        return self.cover[self.cpos - 1]
+    
+    def get_littleendian(self, bytes):
+        v = 0
+        for i in range(bytes):
+            v += self.get_cbyte() << (8 * i)
+        return v
     
     def put_byte(self, b):
         bytes = [
@@ -48,8 +57,7 @@ class LZ77Steg(object):
     
     def update_window_literal(self, llen):
         while llen:
-            self.put_byte(self.cover[self.cpos])
-            self.cpos += 1
+            self.put_byte(self.get_cbyte())
             llen -= 1
     
     def update_window_match(self, mlen, moffset):
@@ -61,8 +69,9 @@ class LZ77Steg(object):
         '''Update window with token, can use the above two'''
         raise NotImplementedError
     
-    def scan(self):
+    def scan(self, cover):
         '''Scans cover for capacity'''
+        self.init(cover)
         capacity = 0
         for t in self.get_tokens():
             if self.is_match(t):
@@ -93,8 +102,9 @@ class LZ77Steg(object):
         '''Updates cover token to new match, must be implemented'''
         raise NotImplementedError
     
-    def store(self, message, storelen=False, nullterm=False):
+    def store(self, cover, message, storelen=False, nullterm=False):
         '''Stores message in cover, returning the modified'''
+        self.init(cover)
         self.message = [ord(i) for i in message]
         if storelen and len(message) <= 0xffff:
             ol = len(message)
@@ -133,8 +143,9 @@ class LZ77Steg(object):
         '''Get the index of the match'''
         raise NotImplementedError
     
-    def retrieve(self, retrievelen=False, nullterm=False):
+    def retrieve(self, cover, retrievelen=False, nullterm=False):
         '''Retrieves message from cover'''
+        self.init(cover)
         self.message = [0]
         self.mpos = 0
         self.mbit = 0

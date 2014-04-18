@@ -16,67 +16,69 @@ def _match(window, pos, bytes):
     return True
 
 
-class LZ4Steg(LZ77Steg):
+class SnappySteg(LZ77Steg):
     
-    TOK_LITERAL = 1
-    TOK_MATCH = 2
+    TOK_LITERAL = 0
+    TOK_COPY1 = 1
+    TOK_COPY2 = 2
+    TOK_COPY4 = 3
+    
+    def get_varint(self):
+        i, v = 0, 0
+        while self.cover[self.cpos] & 0x80:
+            v += (self.get_cbyte() & 0x7f) << (7 * i)
+            i += 1
+        v += self.get_cbyte() << (7 * i)
+        return v
     
     def init(self, cover):
-        super(LZ4Steg, self).init(cover)
-        self.end = self.get_littleendian(4)
+        super(SnappySteg, self).init(cover)
+        self.end = self.get_varint()
     
     def get_tokens(self):
         '''Generator for tokens, must be implemented'''
         while self.pos < self.end:
-            token = self.get_cbyte()
-            llen = token >> 4
-            mlen = token & 0xf
+            tag = self.get_cbyte()
+            ttype = tag & 3
             
-            if llen == 15:
-                while self.cover[self.cpos] == 255:
-                    llen += self.get_cbyte()
-                llen += self.get_cbyte()
-            
-            if llen:
-                yield (self.TOK_LITERAL, llen)
-            
-            if self.pos == self.end:
-                return
+            if ttype == self.TOK_LITERAL:
+                llen = 1 + (tag >> 2)
+                if llen > 60:
+                    llen = self.get_littleendian(llen - 60)
+                yield (ttype, llen)
+                continue
             
             opos = self.cpos
-            
-            moff = self.get_littleendian(2)
-            
-            if mlen == 15:
-                while self.cover[self.cpos] == 255:
-                    mlen += self.get_cbyte()
-                mlen += self.get_cbyte()
-            mlen += 4
-            
-            yield (self.TOK_MATCH, mlen, moff, opos)
+            if ttype == self.TOK_COPY1:
+                mlen = 4 + ((tag >> 2) & 0x7)
+                moff = self.get_cbyte() + ((tag & 0xe0) << 3)
+            elif ttype == self.TOK_COPY2:
+                mlen = 4 + (tag >> 2)
+                moff = self.get_littleendian(2)
+            else:
+                assert type == self.TOK_COPY4
+                assert False
+                mlen = 4 + (tag >> 2)
+                moff = self.get_littleendian(4)
+            yield (ttype, mlen, moff, opos)
     
     def is_match(self, t):
         '''Is token a match token?'''
-        return t[0] == self.TOK_MATCH
+        # Other offset/match lengths not supported
+        return t[0] == self.TOK_COPY2 and t[1] >= 4
     
     def update_window(self, t):
         '''Update window with token'''
         if t[0] == self.TOK_LITERAL:
             self.update_window_literal(t[1])
-        elif t[0] == self.TOK_MATCH:
-            self.update_window_match(t[1], t[2])
         else:
-            raise TypeError
-    
-    def scan(self, cover, skip=4):
-        '''Scans cover for capacity'''
-        self.init(cover)
-        self.cpos += skip
-        return super(LZ4Steg, self).scan()
+            self.update_window_match(t[1], t[2])
     
     def list_possible_matches(self, t):
         '''Return a list of possible matches for t'''
         tt, mlen, moff, opos = t
+        assert tt == self.TOK_COPY2
+        assert mlen >= 4, mlen
         if moff < mlen:
             return [moff] # Too much trouble
         mpos = self.pos - moff
@@ -104,7 +106,7 @@ class LZ4Steg(LZ77Steg):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='LZ4 steganography')
+    parser = argparse.ArgumentParser(description='Snappy steganography')
     parser.add_argument('-d', '--decode', action='store_true')
     parser.add_argument('-m', '--message')
     #parser.add_argument('-o', '--output')
@@ -115,14 +117,14 @@ if __name__ == '__main__':
         cover = f.read()
     
     if args.decode:
-        message = LZ4Steg().retrieve(cover, nullterm=True)
+        message = SnappySteg().retrieve(cover, nullterm=True)
         print message
     elif args.message:
         assert len(args.message)
-        cover = LZ4Steg().store(cover, args.message, nullterm=True)
+        cover = SnappySteg().store(cover, args.message, nullterm=True)
         sys.stdout.write(cover)
     else:
-        bytes = LZ4Steg().scan(cover)
+        bytes = SnappySteg().scan(cover)
         print '%d bytes of storage in %d (%.2f %%)' % (
             bytes, len(cover), bytes * 100. / len(cover)
         )
