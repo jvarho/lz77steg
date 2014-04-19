@@ -95,7 +95,7 @@ if __name__ == '__main__':
         assert len(args.message)
         cover = LZ4Steg().store(cover, args.message, nullterm=True)
         if args.output:
-            with open(args.output) as f:
+            with open(args.output, 'wb') as f:
                 f.write(cover)
         else:
             sys.stdout.write(cover)

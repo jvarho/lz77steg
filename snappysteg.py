@@ -81,8 +81,14 @@ class SnappySteg(LZ77Steg):
 
     def update_match(self, t, nmatch):
         '''Updates cover token to new match, must be implemented'''
-        self.cover[t[3]] = nmatch & 0xff
-        self.cover[t[3] + 1] = nmatch >> 8
+        tt, mlen, moff, opos = t
+        if tt == self.TOK_COPY2:
+            self.cover[opos] = nmatch & 0xff
+            self.cover[opos + 1] = nmatch >> 8
+        elif tt == self.TOK_COPY1:
+            self.cover[opos] = nmatch & 0xff
+            self.cover[opos - 1] = self.cover[opos - 1] & 0x1f
+            self.cover[opos - 1] += (nmatch >> 3) & 0xe0
 
     def get_index(self, mlist, t):
         '''Get the index of the match'''
@@ -107,7 +113,7 @@ if __name__ == '__main__':
         assert len(args.message)
         cover = SnappySteg().store(cover, args.message, nullterm=True)
         if args.output:
-            with open(args.output) as f:
+            with open(args.output, 'wb') as f:
                 f.write(cover)
         else:
             sys.stdout.write(cover)
