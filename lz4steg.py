@@ -6,16 +6,6 @@ import sys
 from lz77steg import LZ77Steg, _hash
 
 
-def _match(window, pos, bytes):
-    last = len(bytes)-1
-    if window[(pos+last) & 0xffff] != bytes[last]:
-        return False
-    for i in range(last):
-        if window[(pos+i) & 0xffff] != bytes[i]:
-            return False
-    return True
-
-
 class LZ4Steg(LZ77Steg):
     
     TOK_LITERAL = 1
@@ -74,24 +64,10 @@ class LZ4Steg(LZ77Steg):
         self.cpos += skip
         return super(LZ4Steg, self).scan()
     
-    def list_possible_matches(self, t):
+    def list_possible_matches_t(self, t):
         '''Return a list of possible matches for t'''
         tt, mlen, moff, opos = t
-        if moff < mlen:
-            return [moff] # Too much trouble
-        mpos = self.pos - moff
-        match = [self.window[(mpos+i) & 0xffff] for i in range(mlen)]
-        bytes = match[:4]
-        h = _hash(bytes) & 0xffff
-        mlist = []
-        p = self.table[h]
-        while p is not None and p >= self.pos - 0xffff:
-            if _match(self.window, p, match):
-                mlist.append(self.pos - p)
-            p = self.chain[p & 0xffff]
-        if moff not in mlist:
-            mlist.append(moff)
-        return mlist
+        return self.list_possible_matches(mlen, moff)
     
     def update_match(self, t, nmatch):
         '''Updates cover token to new match, must be implemented'''

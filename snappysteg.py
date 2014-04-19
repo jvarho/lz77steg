@@ -6,16 +6,6 @@ import sys
 from lz77steg import LZ77Steg, _hash
 
 
-def _match(window, pos, bytes):
-    last = len(bytes)-1
-    if window[(pos+last) & 0xffff] != bytes[last]:
-        return False
-    for i in range(last):
-        if window[(pos+i) & 0xffff] != bytes[i]:
-            return False
-    return True
-
-
 class SnappySteg(LZ77Steg):
     
     TOK_LITERAL = 0
@@ -56,8 +46,7 @@ class SnappySteg(LZ77Steg):
                 mlen = 4 + (tag >> 2)
                 moff = self.get_littleendian(2)
             else:
-                assert type == self.TOK_COPY4
-                assert False
+                assert ttype == self.TOK_COPY4
                 mlen = 4 + (tag >> 2)
                 moff = self.get_littleendian(4)
             yield (ttype, mlen, moff, opos)
@@ -74,26 +63,13 @@ class SnappySteg(LZ77Steg):
         else:
             self.update_window_match(t[1], t[2])
     
-    def list_possible_matches(self, t):
+    def list_possible_matches_t(self, t):
         '''Return a list of possible matches for t'''
         tt, mlen, moff, opos = t
-        assert tt == self.TOK_COPY2
-        assert mlen >= 4, mlen
-        if moff < mlen:
-            return [moff] # Too much trouble
-        mpos = self.pos - moff
-        match = [self.window[(mpos+i) & 0xffff] for i in range(mlen)]
-        bytes = match[:4]
-        h = _hash(bytes) & 0xffff
-        mlist = []
-        p = self.table[h]
-        while p is not None and p >= self.pos - 0xffff:
-            if _match(self.window, p, match):
-                mlist.append(self.pos - p)
-            p = self.chain[p & 0xffff]
-        if moff not in mlist:
-            mlist.append(moff)
-        return mlist
+        if tt == self.TOK_COPY2:
+            return self.list_possible_matches(mlen, moff)
+        else:
+            assert False
     
     def update_match(self, t, nmatch):
         '''Updates cover token to new match, must be implemented'''

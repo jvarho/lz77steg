@@ -13,6 +13,16 @@ def _hash(b):
     return a
 
 
+def _match(window, pos, bytes):
+    last = len(bytes)-1
+    if window[(pos+last) & 0xffff] != bytes[last]:
+        return False
+    for i in range(last):
+        if window[(pos+i) & 0xffff] != bytes[i]:
+            return False
+    return True
+
+
 class LZ77Steg(object):
     
     def init(self, cover):
@@ -69,13 +79,35 @@ class LZ77Steg(object):
         '''Update window with token, can use the above two'''
         raise NotImplementedError
     
+    def list_possible_matches(self, mlen, moff):
+        '''Return a list of possible matches for match'''
+        if moff < mlen:
+            return [moff] # Too much trouble
+        mpos = self.pos - moff
+        match = [self.window[(mpos+i) & 0xffff] for i in range(mlen)]
+        bytes = match[:4]
+        h = _hash(bytes) & 0xffff
+        mlist = []
+        p = self.table[h]
+        while p is not None and p >= self.pos - 0xffff:
+            if _match(self.window, p, match):
+                mlist.append(self.pos - p)
+            p = self.chain[p & 0xffff]
+        if moff not in mlist:
+            mlist.append(moff)
+        return mlist
+    
+    def list_possible_matches_t(self, t):
+        '''Return a list of possible matches for t'''
+        raise NotImplementedError
+    
     def scan(self, cover):
         '''Scans cover for capacity'''
         self.init(cover)
         capacity = 0
         for t in self.get_tokens():
             if self.is_match(t):
-                mlist = self.list_possible_matches(t)
+                mlist = self.list_possible_matches_t(t)
                 bits = int(math.log(len(mlist), 2))
                 capacity += bits
             self.update_window(t)
@@ -93,10 +125,6 @@ class LZ77Steg(object):
                 if self.mpos == self.mlen:
                     return index, True
         return index, False
-    
-    def list_possible_matches(self, t):
-        '''Return a list of possible matches for t'''
-        raise NotImplementedError
     
     def update_match(self, t, nmatch):
         '''Updates cover token to new match, must be implemented'''
@@ -116,7 +144,7 @@ class LZ77Steg(object):
         self.mlen = len(self.message)
         for t in self.get_tokens():
             if self.is_match(t):
-                mlist = self.list_possible_matches(t)
+                mlist = self.list_possible_matches_t(t)
                 bits = int(math.log(len(mlist), 2))
                 index, exit = self.get_message_bits(bits)
                 nmatch = mlist[index]
@@ -152,7 +180,7 @@ class LZ77Steg(object):
         self.mlen = -1
         for t in self.get_tokens():
             if self.is_match(t):
-                mlist = self.list_possible_matches(t)
+                mlist = self.list_possible_matches_t(t)
                 bits = int(math.log(len(mlist), 2))
                 ompos = self.mpos
                 if self.set_message_bits(bits, self.get_index(mlist, t)):
