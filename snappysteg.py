@@ -1,4 +1,8 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+#
+# Copyright (c) 2014, Jan Varho <jan@varho.org>
+# Some rights reserved, see COPYING
+
 
 import argparse
 import sys
@@ -89,7 +93,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Snappy steganography')
     parser.add_argument('-d', '--decode', action='store_true')
     parser.add_argument('-m', '--message')
-    #parser.add_argument('-o', '--output')
+    parser.add_argument('-o', '--output')
     parser.add_argument('FILE')
     args = parser.parse_args()
     
@@ -102,10 +106,25 @@ if __name__ == '__main__':
     elif args.message:
         assert len(args.message)
         cover = SnappySteg().store(cover, args.message, nullterm=True)
-        sys.stdout.write(cover)
+        if args.output:
+            with open(args.output) as f:
+                f.write(cover)
+        else:
+            sys.stdout.write(cover)
     else:
-        bytes = SnappySteg().scan(cover)
-        print '%d bytes of storage in %d (%.2f %%)' % (
-            bytes, len(cover), bytes * 100. / len(cover)
+        s = SnappySteg()
+        cap, pcap = s.scan(cover)
+        clen = len(cover)
+        print (
+            'Size',
+            'Compressed', 'ratio',
+            'Stored', 'ratio',
+            'Storable', 'ratio',
+        )
+        print (
+            s.end,
+            clen, clen * 100. / s.end,
+            cap, cap * 100. / clen,
+            pcap, pcap * 100. / clen,
         )
 

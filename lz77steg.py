@@ -1,3 +1,8 @@
+#!/usr/bin/env python
+#
+# Copyright (c) 2014, Jan Varho <jan@varho.org>
+# Some rights reserved, see COPYING
+
 
 import math
 
@@ -104,14 +109,15 @@ class LZ77Steg(object):
     def scan(self, cover):
         '''Scans cover for capacity'''
         self.init(cover)
-        capacity = 0
+        capacity = pcapacity = 0
         for t in self.get_tokens():
             if self.is_match(t):
                 mlist = self.list_possible_matches_t(t)
-                bits = int(math.log(len(mlist), 2))
-                capacity += bits
+                bits = math.log(len(mlist), 2)
+                capacity += int(bits)
+                pcapacity += bits
             self.update_window(t)
-        return capacity // 8
+        return capacity // 8, int(pcapacity // 8)
 
     def get_message_bits(self, bits):
         index = 0

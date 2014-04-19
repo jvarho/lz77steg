@@ -1,4 +1,8 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+#
+# Copyright (c) 2014, Jan Varho <jan@varho.org>
+# Some rights reserved, see COPYING
+
 
 import argparse
 import sys
@@ -58,12 +62,6 @@ class LZ4Steg(LZ77Steg):
         else:
             raise TypeError
     
-    def scan(self, cover, skip=4):
-        '''Scans cover for capacity'''
-        self.init(cover)
-        self.cpos += skip
-        return super(LZ4Steg, self).scan()
-    
     def list_possible_matches_t(self, t):
         '''Return a list of possible matches for t'''
         tt, mlen, moff, opos = t
@@ -83,7 +81,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='LZ4 steganography')
     parser.add_argument('-d', '--decode', action='store_true')
     parser.add_argument('-m', '--message')
-    #parser.add_argument('-o', '--output')
+    parser.add_argument('-o', '--output')
     parser.add_argument('FILE')
     args = parser.parse_args()
     
@@ -96,10 +94,25 @@ if __name__ == '__main__':
     elif args.message:
         assert len(args.message)
         cover = LZ4Steg().store(cover, args.message, nullterm=True)
-        sys.stdout.write(cover)
+        if args.output:
+            with open(args.output) as f:
+                f.write(cover)
+        else:
+            sys.stdout.write(cover)
     else:
-        bytes = LZ4Steg().scan(cover)
-        print '%d bytes of storage in %d (%.2f %%)' % (
-            bytes, len(cover), bytes * 100. / len(cover)
+        s = LZ4Steg()
+        cap, pcap = s.scan(cover)
+        clen = len(cover)
+        print (
+            'Size',
+            'Compressed', 'ratio',
+            'Stored', 'ratio',
+            'Storable', 'ratio',
+        )
+        print (
+            s.end,
+            clen, clen * 100. / s.end,
+            cap, cap * 100. / clen,
+            pcap, pcap * 100. / clen,
         )
 
