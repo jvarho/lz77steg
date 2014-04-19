@@ -76,6 +76,8 @@ class LZ77Steg(object):
             llen -= 1
 
     def update_window_match(self, mlen, moffset):
+        assert 0 < moffset <= self.pos
+        assert moffset <= 0xffff
         while mlen:
             self.put_byte(self.window[(self.pos - moffset) & 0xffff])
             mlen -= 1

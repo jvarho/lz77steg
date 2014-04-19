@@ -38,7 +38,7 @@ class SnappySteg(LZ77Steg):
             if ttype == self.TOK_LITERAL:
                 llen = 1 + (tag >> 2)
                 if llen > 60:
-                    llen = self.get_littleendian(llen - 60)
+                    llen = 1 + self.get_littleendian(llen - 60)
                 yield (ttype, llen)
                 continue
 
