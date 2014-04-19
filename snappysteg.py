@@ -43,11 +43,11 @@ class SnappySteg(LZ77Steg):
                 mlen = 4 + ((tag >> 2) & 0x7)
                 moff = self.get_cbyte() + ((tag & 0xe0) << 3)
             elif ttype == self.TOK_COPY2:
-                mlen = 4 + (tag >> 2)
+                mlen = 1 + (tag >> 2)
                 moff = self.get_littleendian(2)
             else:
                 assert ttype == self.TOK_COPY4
-                mlen = 4 + (tag >> 2)
+                mlen = 1 + (tag >> 2)
                 moff = self.get_littleendian(4)
             yield (ttype, mlen, moff, opos)
     
