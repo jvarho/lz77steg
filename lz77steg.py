@@ -79,7 +79,7 @@ class LZ77Steg(object):
         '''Update window with token, can use the above two'''
         raise NotImplementedError
     
-    def list_possible_matches(self, mlen, moff):
+    def list_possible_matches(self, mlen, moff, maxoff=0xffff):
         '''Return a list of possible matches for match'''
         if moff < mlen:
             return [moff] # Too much trouble
@@ -89,7 +89,7 @@ class LZ77Steg(object):
         h = _hash(bytes) & 0xffff
         mlist = []
         p = self.table[h]
-        while p is not None and p >= self.pos - 0xffff:
+        while p is not None and p >= self.pos - maxoff:
             if _match(self.window, p, match):
                 mlist.append(self.pos - p)
             p = self.chain[p & 0xffff]

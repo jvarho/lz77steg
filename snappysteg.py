@@ -53,8 +53,10 @@ class SnappySteg(LZ77Steg):
     
     def is_match(self, t):
         '''Is token a match token?'''
-        # Other offset/match lengths not supported
-        return t[0] == self.TOK_COPY2 and t[1] >= 4
+        # Window is too small for 4-byte offsets
+        if t[0] == self.TOK_LITERAL or t[0] == self.TOK_COPY4:
+            return False
+        return t[1] >= 4 # using 4-byte hash
     
     def update_window(self, t):
         '''Update window with token'''
@@ -66,8 +68,10 @@ class SnappySteg(LZ77Steg):
     def list_possible_matches_t(self, t):
         '''Return a list of possible matches for t'''
         tt, mlen, moff, opos = t
-        if tt == self.TOK_COPY2:
+        if tt == self.TOK_COPY2 or tt == self.TOK_COPY4:
             return self.list_possible_matches(mlen, moff)
+        elif tt == self.TOK_COPY1:
+            return self.list_possible_matches(mlen, moff, maxoff=0x7ff)
         else:
             assert False
     
