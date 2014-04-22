@@ -79,9 +79,12 @@ class LZ4Steg(LZ77Steg):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='LZ4 steganography')
-    parser.add_argument('-d', '--decode', action='store_true')
-    parser.add_argument('-m', '--message')
-    parser.add_argument('-o', '--output')
+    action = parser.add_mutually_exclusive_group()
+    action.add_argument('-d', '--decode', action='store_true')
+    action.add_argument('-m', '--message')
+    output = parser.add_mutually_exclusive_group()
+    output.add_argument('-i', '--inplace', action='store_true')
+    output.add_argument('-o', '--output')
     parser.add_argument('FILE')
     args = parser.parse_args()
 
@@ -96,6 +99,9 @@ if __name__ == '__main__':
         cover = LZ4Steg().store(cover, args.message, nullterm=True)
         if args.output:
             with open(args.output, 'wb') as f:
+                f.write(cover)
+        elif args.inplace:
+            with open(args.FILE, 'wb') as f:
                 f.write(cover)
         else:
             sys.stdout.write(cover)
