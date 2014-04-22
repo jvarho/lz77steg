@@ -160,6 +160,8 @@ class LZ77Steg(object):
                 if exit:
                     break
             self.update_window(t)
+        if self.mpos < len(self.message):
+            raise MessageLengthError(self.cover, self.message, self.mpos)
         return self.cover
 
     def set_message_bits(self, bits, index):
@@ -206,4 +208,18 @@ class LZ77Steg(object):
                 self.message = self.message[:-1]
         return ''.join([chr(i) for i in self.message])
 
+
+class MessageLengthError(Exception):
+    '''Message was too long for cover'''
+
+    def __init__(self, cover, message, written):
+        self.cover = cover
+        self.message = message
+        self.written = written
+
+    def __str__(self):
+        return '%d/%d bytes written' % (
+            self.written,
+            len(self.message)
+        )
 
