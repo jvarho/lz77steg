@@ -127,16 +127,11 @@ if __name__ == '__main__':
         s = SnappySteg()
         cap, pcap = s.scan(cover)
         clen = len(cover)
-        print (
-            'Size',
-            'Compressed', 'ratio',
-            'Stored', 'ratio',
-            'Storable', 'ratio',
-        )
-        print (
-            s.end,
-            clen, clen * 100. / s.end,
-            cap, cap * 100. / clen,
-            pcap, pcap * 100. / clen,
-        )
+        su = 'Size uncompressed %d' % s.end
+        dl = len(su) - len('Size uncompressed ')
+        d = '%' + str(dl) + 'd'
+        print su
+        print ('Size compressed   '+d+' (%.2f%%)') % (clen, clen * 100. / s.end)
+        print ('Storage           '+d+' (%.2f%%)') % (cap, cap * 100. / clen)
+        print ('Storage potential '+d+' (%.2f%%)') % (pcap, pcap * 100. / clen)
 
