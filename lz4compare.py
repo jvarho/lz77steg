@@ -1,7 +1,12 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+#
+# Copyright (c) 2014, Jan Varho <jan@varho.org>
+# Some rights reserved, see COPYING
+
 
 import argparse
 import lz4
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='LZ4 comparison')

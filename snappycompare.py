@@ -1,10 +1,15 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+#
+# Copyright (c) 2014, Jan Varho <jan@varho.org>
+# Some rights reserved, see COPYING
+
 
 import argparse
 import snappy
 
+
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='LZ4 comparison')
+    parser = argparse.ArgumentParser(description='Snappy comparison')
     parser.add_argument('FILE1')
     parser.add_argument('FILE2')
     args = parser.parse_args()
