@@ -27,15 +27,16 @@ Usage
     ./lz4steg.py FILE
 
 Scans an lz4 compressed file for steganographic storage, reporting some numbers.
-The relevant number is the number of bytes "stored", which is what the below
+The relevant number is the number of storage bytes, which is what the below
 commands can store into the file (less one for NULL).
 
 
     ./lz4steg.py -m MESSAGE FILE
 
 Stores the message given into the file, writing the modified file to stdout.
-You can supply an output file with the -o switch. The message is stored NULL
-terminated, so it should not contain a zero byte.
+You can supply an output file with the -o switch or modify the cover inplace
+with -i. The message is stored NULL terminated, so it should not contain zero
+bytes.
 
 
     ./lz4steg.py -d FILE
