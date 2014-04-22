@@ -1,10 +1,13 @@
 LZ77 Steganography
 ==
 
-LZ4 and Snappy are two high speed compression algorithms based on LZ77 of
+LZ4[1] and Snappy[2] are two high speed compression algorithms based on LZ77 of
 Lempel and Ziv. They use no entropy coding so steganography based on their
 backreference/match redundancy is easy and completely transparent to users of
 the compressed cover.
+
+[1]: https://code.google.com/p/lz4/
+[2]: https://code.google.com/p/snappy/
 
 lz4steg.py implements a steganography algorithm for LZ4, snappysteg.py is the
 same but for Snappy. The below description is for the LZ4 version but the other
@@ -21,21 +24,21 @@ Requirements
 Usage
 --
 
-./lz4steg.py FILE
+    ./lz4steg.py FILE
 
 Scans an lz4 compressed file for steganographic storage, reporting some numbers.
 The relevant number is the number of bytes "stored", which is what the below
 commands can store into the file (less one for NULL).
 
 
-./lz4steg.py -m MESSAGE FILE
+    ./lz4steg.py -m MESSAGE FILE
 
 Stores the message given into the file, writing the modified file to stdout.
 You can supply an output file with the -o switch. The message is stored NULL
 terminated, so it should not contain a zero byte.
 
 
-./lz4steg.py -d FILE
+    ./lz4steg.py -d FILE
 
 Decodes the stored message from the file, writing it to stdout. The message is
 assumed to be NULL terminated, so if you've stored binary data you may only see
