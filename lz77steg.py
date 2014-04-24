@@ -100,8 +100,6 @@ class LZ77Steg(object):
             if _match(self.window, p, match):
                 mlist.append(self.pos - p)
             p = self.chain[p & 0xffff]
-        if moff not in mlist:
-            mlist.append(moff)
         return mlist
 
     def list_possible_matches_t(self, t):
@@ -190,11 +188,15 @@ class LZ77Steg(object):
         self.mlen = -1
         for t in self.get_tokens():
             if self.is_match(t):
-                mlist = self.list_possible_matches_t(t)
-                bits = int(math.log(len(mlist), 2))
-                ompos = self.mpos
-                if self.set_message_bits(bits, self.get_index(mlist, t)):
-                    break
+                try:
+                    mlist = self.list_possible_matches_t(t)
+                    bits = int(math.log(len(mlist), 2))
+                    mlist = mlist[:1 << bits]
+                    ompos = self.mpos
+                    if self.set_message_bits(bits, self.get_index(mlist, t)):
+                        break
+                except ValueError:
+                    raise UnknownEncodingError()
                 if nullterm and self.mpos > ompos:
                     if 0 in self.message[ompos:self.mpos]:
                         break
@@ -222,4 +224,11 @@ class MessageLengthError(Exception):
             self.written,
             len(self.message)
         )
+
+
+class UnknownEncodingError(Exception):
+    '''This doesn't look like a message'''
+
+    def __str__(self):
+        return 'malformed message'
 
