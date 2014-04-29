@@ -6,12 +6,12 @@ Lempel and Ziv. They use no entropy coding so steganography based on their
 backreference/match redundancy is easy and completely transparent to users of
 the compressed cover.
 
-[1]: https://code.google.com/p/lz4/
-[2]: https://code.google.com/p/snappy/
-
 lz4steg.py implements a steganography algorithm for LZ4, snappysteg.py is the
 same but for Snappy. The below description is for the LZ4 version but the other
 one works just the same.
+
+For an in-depth description of what's going on and some numbers, see my blog
+post on this[3].
 
 
 Requirements
@@ -44,3 +44,9 @@ bytes.
 Decodes the stored message from the file, writing it to stdout. The message is
 assumed to be NULL terminated, so if you've stored binary data you may only see
 a part of the message.
+
+
+[1]:https://code.google.com/p/lz4/
+[2]:https://code.google.com/p/snappy/
+[3]:http://jan.varho.org/?p=361
+
