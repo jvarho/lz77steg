@@ -1,6 +1,6 @@
 
 - Support LZ4 stream format:
-    https://code.google.com/p/snappy/source/browse/trunk/framing_format.txt
+    https://github.com/google/snappy/blob/master/framing_format.txt
 - Support Snappy framing format:
     http://fastcompression.blogspot.fr/2013/04/lz4-streaming-format-final.html
 

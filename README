@@ -46,7 +46,6 @@ assumed to be NULL terminated, so if you've stored binary data you may only see
 a part of the message.
 
 
-[1]:https://code.google.com/p/lz4/
-[2]:https://code.google.com/p/snappy/
-[3]:http://jan.varho.org/?p=361
-
+[1]:https://github.com/lz4/lz4
+[2]:https://google.github.io/snappy/
+[3]:http://jan.varho.org/user-transparent-lz77-steganography.html
